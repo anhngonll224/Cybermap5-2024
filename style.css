@@ -1,0 +1,100 @@
+.rank-king-box {
+  width: 20%;
+  margin-left: 20px;
+  line-height: 40px;
+}
+
+h3 {
+  margin: 0px;
+}
+
+center {
+  width: 100%;
+}
+
+.table-rank {
+  color: white;
+  margin-top: 10px;
+  padding: 17px;
+  background: transparent;
+  height: 56%;
+  padding-top: 0px;
+  border-radius: 11px;
+}
+
+th {
+  text-align: left;
+  font-size: 15px;
+}
+
+.table-console table {
+  width: 100%;
+  /* margin-top: 0px; */
+}
+
+.table-console {
+  color: white;
+  background: transparent;
+  /* height    : 56%; */
+  padding: 17px;
+  padding-top: 0px;
+  border-radius: 11px;
+}
+
+.table-box-commnet {
+  overflow: hidden;
+  height: 135px;
+}
+
+body {
+  margin: 0px;
+  background-color: #4d5055;
+  /* background-image: url(./images/beautiful-night-sky-with-shiny-stars.jpg); */
+}
+
+.box-map {
+  background-image: radial-gradient(
+    closest-side,
+    rgba(128, 80, 128, 0.15) 15%,
+    rgb(18, 16, 21) 100%
+  );
+}
+
+.img-backgroup {
+  border-radius: 50%;
+  background-size: 28px;
+  width: 100%;
+  background-repeat: repeat;
+  background-image: url("https://sc1.checkpoint.com/threatmap/build/images/map-grid.svg");
+}
+
+/* .img-backgroup img {
+    width            : 80px;
+    background-repeat: repeat;
+} */
+
+/* @media only screen and (max-width:1900px) {
+    center {
+        width: 75%;
+    }
+} */
+
+@media (max-width: 1366px) {
+  .my-center {
+    margin: 0px !important;
+  }
+
+  svg {
+    height: 600px !important;
+  }
+}
+
+@media (max-width: 1920px) {
+  .my-center {
+    margin: 100px;
+  }
+
+  svg {
+    height: 700px;
+  }
+}

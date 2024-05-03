@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Leaflet GeoJSON Example</title>
+  <meta charset="utf-8" />
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+
+  <style type="text/css">
+    body {
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .rank-king-box {
+      width: 20%;
+      margin-left: 20px;
+      line-height: 40px;
+    }
+
+    h3 {
+      margin: 0px;
+    }
+
+    center {
+      width: 80%;
+    }
+
+    .table-rank {
+      height: 50%;
+    }
+
+    th {
+      text-align: left;
+    }
+
+    .table-console table {
+      width: 100%;
+    }
+
+    .leaflet-container {
+      background-color: #c5e8ff;
+    }
+
+    svg {
+      width: 100%;
+      height: 100vh;
+    }
+
+    center {
+      width: 100%;
+    }
+
+    .box-map {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+      height: 100vh;
+
+    }
+
+    /* CSS cho tooltip */
+    .country-name-tooltip {
+      position: absolute;
+      z-index: 999;
+      background-color: white;
+      border: 1px solid #ccc;
+      padding: 8px;
+      font-size: 12px;
+      display: none;
+    }
+
+    /* đổi màu khi hover */
+    .country:hover {
+      fill: lightcoral;
+      /* Màu fill khi hover */
+    }
+
+    .attack-line {
+      fill: none;
+      stroke: rgba(0, 255, 0, 0.6);
+      /* Màu xanh với độ trong suốt 0.8 */
+      stroke-width: 3;
+      filter: url(#glow);
+
+      /* Thêm hiệu ứng glow */
+    }
+
+
+    .attack-line {
+      filter: url(#colorEffect) !important;
+      /* Thêm hiệu ứng màu sắc */
+    }
+  </style>
+  <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
+    <feFlood flood-color="rgba(255, 0, 0, 0.8)" result="color" />
+    <feComposite in2="color" operator="in" />
+    <feMerge>
+      <feMergeNode in="color" />
+      <feMergeNode in="SourceGraphic" />
+    </feMerge>
+  </filter>
+  <filter id="colorEffect">
+    <feColorMatrix type="matrix" values="
+          0.5 0   0   0   0
+          0   0.8 0   0   0
+          0   0   1   0   0
+          0   0   0   0.8 0" />
+  </filter>
+
+
+  <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+  <script src="http://cdn.leafletjs.com/leaflet-0.7.1/leaflet.js"></script>
+  <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+  <div class="box-map">
+    <div class="rank-king-box">
+      <div class="table-rank">
+        <h3>Ranking </h3>
+        <hr>
+        <!-- <div id="bidvDiv">BIDV : <span>3000</span></div>
+        <div id="vpbankDiv">VPBank: <span>3000</span></div>
+        <div id="mbDiv">MB: <span>3000</span></div>
+        <div id="hdbankDiv">HDBank: <span>3000</span></div>
+        <div id="teachDiv">Teach: <span>3000</span></div>
+        <div id="tpbankDiv">TPBank: <span>3000</span></div>
+        <div id="vietinbankDiv">VietinBank: <span>3000</span></div> -->
+        <div id="tableranking">
+
+        </div>
+      </div>
+      <br>
+      <div class="table-console">
+        <h3>Activity Log:</h3>
+        <hr>
+        <div class="table-box-commnet" id="scrollableDiv">
+          <table>
+            <tr>
+              <th>Attack Time</th>
+              <th>Target Time</th>
+              <th>Time</th>
+            </tr>
+            <tr>
+              <td id="attackTime">BIDV</td>
+              <td id="targetTime">HDBank</td>
+              <td id="attackTime">06:02:06</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="" style="width: 100%;height: 100%;">
+      <div class="img-backgroup">
+
+        <!-- <img src="	https://sc1.checkpoint.com/threatmap/build/images/map-grid.svg" alt=""> -->
+
+        <div class="my-center"></div>
+      </div>
+    </div>
+  </div>
+  <div class="country-name-tooltip"></div>
+
+  <script>
+    function updateRankingBox() {
+      // Lặp qua mỗi đội trong Totle và cập nhật nội dung của thẻ div tương ứng
+      // Object.keys(Totle).forEach((team) => {
+      //   const points = Totle[team].reduce((sum, value) => sum + value, 0);
+      //   $(`#${team.toLowerCase()}Div`).text(`${team}: ${points}`);
+      // });
+      // Tạo một mảng các đội dựa trên điểm số
+      const teamsArray = Object.keys(Totle).map((team) => ({
+        name: team,
+        points: Totle[team].reduce((sum, value) => sum + value, 0),
+      }));
+      teamsArray.sort((a, b) => b.points - a.points);
+      // Tạo một div mới để chứa nội dung của các đội
+      const rankingContainer = document.createElement('div');
+      rankingContainer.id = 'tableranking'; // Đặt id là "tableranking"
+      // Lặp qua mảng đã sắp xếp và thêm nội dung của các đội vào div mới
+      teamsArray.forEach((team) => {
+        const teamDiv = document.createElement('div');
+        teamDiv.className = 'teamDiv';
+
+        const span = document.createElement('span');
+        span.textContent = `${team.name}: ${team.points}`;
+
+        // Thêm span vào div của đội
+        teamDiv.appendChild(span);
+
+        // Thêm div của đội vào div chung
+        rankingContainer.appendChild(teamDiv);
+      });
+
+      // Lấy div cũ để thay thế
+      const oldRankingContainer = document.getElementById('tableranking');
+
+      // Thay thế div cũ bằng div mới
+      if (oldRankingContainer) {
+        oldRankingContainer.parentNode.replaceChild(rankingContainer, oldRankingContainer);
+      } else {
+        // Nếu không tìm thấy div cũ, thêm div mới vào body
+        document.body.appendChild(rankingContainer);
+      }
+    }
+    const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
+    const svg = d3.select(".my-center").append("svg");
+    let sizeWidth = 1040
+    const projection = d3.geoMercator()
+      .scale(1040)  // Điều chỉnh tỷ lệ theo nhu cầu
+      .center([55.854444, 38.028511])
+    // Tọa độ trung tâm của Việt Nam
+    // .translate([width / 2, height / 2]);
+    // Tạo trình tạo đường địa lý
+    const path = d3.geoPath().projection(projection);
+    // Mảng chứa các điểm đầu và cuối của các đường attack
+    // Mảng tính điểm 
+
+    function getRandomObjects(arr, count) {
+      const shuffled = arr.sort(() => 0.5 - Math.random());
+      return shuffled.slice(0, count);
+    }
+
+    async function generateRandomAttackLines() {
+      try {
+        const response = await fetch('./dataVecterMap.json');
+        const data = await response.json();
+
+        if (!data || !data.dataVectorMap) {
+          throw new Error('Invalid or missing data structure in JSON.');
+        }
+
+        const randomObjects = getRandomObjects(data.dataVectorMap, 4);
+        console.log('randomObjects', randomObjects);
+
+        return randomObjects;
+      } catch (error) {
+        console.error('Error loading or parsing the JSON file:', error.message);
+        return [];
+      }
+    }
+
+
+    function addExplosion(x, y) {
+      const explosion = svg
+        .append("circle")
+        .attr("cx", x)
+        .attr("cy", y)
+        .attr("r", 8)
+        .style("fill", "orange")
+        .style("opacity", 1)
+        .on("end", function () {
+          // Sau khi hoàn thành animation, xóa hiệu ứng vụ nổ khỏi mảng và SVG
+          explosions.splice(explosions.indexOf(explosion), 1);
+          d3.select(this).remove();
+          resolve(); // Giải quyết Promise khi hiệu ứng hoàn thành
+        });
+      explosions.push(explosion);
+      explosion
+        .transition()
+        .duration(1000)
+        .ease(d3.easeBounce)
+        .style("opacity", 0)
+        .on("end", function () {
+          // Sau khi hoàn thành animation, xóa hiệu ứng vụ nổ khỏi mảng và SVG
+          explosions.splice(explosions.indexOf(explosion), 1);
+          d3.select(this).remove();
+        });
+      // Tạo hiệu ứng tia sáng
+      const glow = svg
+        .append("circle")
+        .attr("cx", x)
+        .attr("cy", y)
+        .attr("r", 15)
+        .style("fill", "none")
+        .style("stroke", "rgba(255, 165, 0, 0.6)")
+        .style("stroke-width", 2)
+        .style("opacity", 1);
+      glow
+        .transition()
+        .duration(1000)
+        .ease(d3.easeLinear)
+        .style("opacity", 0)
+        .on("end", function () {
+          // Sau khi hoàn thành animation, xóa hiệu ứng tia sáng khỏi SVG
+          d3.select(this).remove();
+        });
+    }
+
+    // Function to highlight the attacked country
+    // Hàm để tô sáng quốc gia bị tấn công
+    function highlightAttackedCountry(countryName) {
+      // Lấy danh sách tất cả các quốc gia
+      const countries = document.querySelectorAll(".leaflet-interactive");
+      // Lặp qua danh sách các quốc gia
+      for (const country of countries) {
+        // Lấy dữ liệu của quốc gia hiện tại
+        const countryData = country.__data__;
+        // Kiểm tra xem quốc gia hiện tại có phải là quốc gia bị tấn công hay không
+        if (countryData && countryData.properties.name === countryName) {
+          // Nếu đúng, thay đổi màu tô của quốc gia thành màu đỏ
+          country.style.fill = "red";
+          // Thêm hiệu ứng chuyển đổi để tạo hiệu ứng mượt mà
+          country.style.transition = "fill 1s ease-out";
+          // Chờ hiệu ứng chuyển đổi hoàn thành và chuyển về màu gốc
+          setTimeout(() => {
+            // Thay đổi màu tô của quốc gia thành màu xanh lam nhạt
+            country.style.fill = "lightblue";
+            resolve(); // Giải quyết Promise sau khi kết thúc hiệu ứng chuyển đổi
+          }, 1000);
+        }
+      }
+    }
+    // Đặt tên quốc gia mục tiêu
+    const targetCountry = "TênQuốcGiaBịTấnCông";
+    const explosions = [];
+    let targetReached = false; // Biến kiểm tra xem mục tiêu đã được đạt đến hay chưa
+
+    async function updateAttackLines() {
+      const attackLinesData = await generateRandomAttackLines();
+      // Vẽ các đường tấn công trên SVG
+      const attackLines = svg
+        .selectAll(".attack-line")
+        .data(attackLinesData)
+        .join("path")
+        .attr("class", "attack-line");
+      // Xóa các đường tấn công không còn sử dụng
+      // attackLines.exit().remove();
+
+      attackLines
+        .enter()
+        .append("path")
+        .attr("class", "attack-line")
+        .merge(attackLines)
+        .attr("stroke-linejoin", "round")
+        .attr("stroke-width", 3)
+
+        .attr("d", function (d) {
+          const sourceProjected = projection(d.source);
+          const targetProjected = projection(d.target);
+          const sourceX = sourceProjected[0];
+          const sourceY = sourceProjected[1];
+          const targetX = targetProjected[0];
+          const targetY = targetProjected[1];
+
+          const dx = targetX - sourceX;
+          const dy = targetY - sourceY;
+          const dr = Math.sqrt(dx * dx + dy * dy) * 0.2;
+          const line = d3.line().curve(d3.curveBasis);
+          // Control points for a quadratic Bézier curve
+          const controlX = (sourceX + targetX) / 2;
+          const controlY = (sourceY + targetY) / 2 - dr;
+
+          const lineData = [
+            [sourceX, sourceY],
+            [controlX, controlY],
+            [targetX, targetY]
+          ];
+
+          const linePath = line(lineData);
+
+          return linePath;
+        })
+
+
+        .attr("stroke-dasharray", function () {
+          const length = this.getTotalLength();
+          return length;
+        })
+        .attr("stroke-dashoffset", function () {
+          const length = this.getTotalLength();
+          return length;
+        })
+        .transition()
+        .duration(1000)
+        .ease(d3.easeLinear)
+        .attr("stroke-dashoffset", function (d, i, nodes) {
+          const length = this.getTotalLength();
+          const isLastNode = i === nodes.length - 1;
+          return -length;
+        })
+        .on("end", function (d, i, nodes) {
+          // Nếu là nút cuối cùng, gọi hàm addExplosion cho tất cả các điểm cuối cùng
+          if (i === nodes.length - 1) {
+            attackLinesData.forEach((line) => {
+              const targetProjected = projection(line.target);
+              const targetX = targetProjected[0];
+              const targetY = targetProjected[1];
+              addExplosion(targetX, targetY, targetCountry);
+
+            });
+            updateRankingBox();
+          }
+        });
+      // Tính điểm từ sourceCoordinates
+      const teamMapping = {
+        "54,33": "MB",
+        "43,33": "HDBAnk",
+        "65,33.5": "TCB",
+        "62.5,42": "BIDV",
+        "70,30": "TPBank",
+        "59,39": "VPBank",
+      };
+
+      await Promise.all(attackLinesData.map(async (line) => {
+        const sourceCoordinates = line.source;
+        const team = teamMapping[sourceCoordinates.join(",")];
+        if (team) {
+          addPointsToTeam(team, 1000);
+        }
+      }));
+      const printedTeams = [];
+
+      attackLinesData.forEach((line) => {
+        const attackingTeam = line.attackingTeam + ` ➔`;
+        const targetTeam = line.targetTeam;
+        console.log(`Đội ${attackingTeam} đang tấn công đội ${targetTeam}\n`);
+        // Thêm một hàng mới vào bảng Nhật ký hoạt động
+        const activityLogTable = document.querySelector('.table-console table');
+        const activityLogRow = activityLogTable.insertRow(0);
+        const attackCell = activityLogRow.insertCell(0);
+        const targetCell = activityLogRow.insertCell(1);
+        const timeCell = activityLogRow.insertCell(2);
+
+        attackCell.textContent = attackingTeam;
+        targetCell.textContent = targetTeam;
+        // Gán giá trị thời gian nếu có
+        // timeCell.textContent = getFormattedCurrentTime(); 
+
+        // Thêm đội vào mảng đã in ra
+        printedTeams.push(attackingTeam);
+      });
+      // Nếu bạn muốn chỉ in ra một lần cho mỗi đội, bạn có thể làm điều này bằng cách sử dụng Set
+      const uniqueTeams = [...new Set(printedTeams)];
+      console.log("Các đội đã tấn công:", uniqueTeams);
+      // Cập nhật Ranking
+      processAttackLines(attackLinesData);
+      // Cập nhật tên đội trong HTML
+      const attackingTeamElement = document.getElementById('attackTime');
+      attackingTeamElement.insertAdjacentHTML('afterbegin', `Đội tấn công: ${attackingTeam}\n`);
+      const targetTeamElement = document.getElementById('targetTime');
+      targetTeamElement.insertAdjacentHTML('afterbegin', `Đội mục tiêu: ${targetTeam}\n`);
+
+      // Update team points in HTML elements
+      // Update team points in HTML elements
+      const bidvSpan = await bidvDiv.querySelector('span');
+      bidvSpan.textContent = Totle.BIDV;
+
+      const vpbankSpan = await vpbankDiv.querySelector('span');
+      vpbankSpan.textContent = Totle.TCB;
+
+      const mbSpan = await awaitmbDiv.querySelector('span');
+      mbSpan.textContent = Totle.MB;
+
+      const hdbankSpan = await hdbankDiv.querySelector('span');
+      hdbankSpan.textContent = Totle.HDBAnk;
+
+      const teachSpan = await teachDiv.querySelector('span');
+      teachSpan.textContent = Totle.TCB;
+
+      const tpbankSpan = await tpbankDiv.querySelector('span');
+      tpbankSpan.textContent = Totle.TPBank;
+
+      const vietinbankSpan = await vietinbankDiv.querySelector('span');
+      vietinbankSpan.textContent = Totle.BIDV;
+      // const vpbankDiv = document.getElementById('vpbankDiv');
+      // vpbankDiv.textContent = `VPBank: ${Totle.TCB}`;
+      resolve(Totle);
+
+    }
+    setInterval(updateAttackLines, 1200);
+    const Totle = {
+      MB: [],
+      HDBAnk: [],
+      TCB: [],
+      BIDV: [],
+      TPBank: [],
+    };
+
+
+    // Hàm để thêm điểm vào một đội trong mảng Totle
+    function addPointsToTeam(team, points) {
+      if (!Totle[team]) {
+        Totle[team] = [];
+      }
+      Totle[team].push(points);
+      // Tổng hợp điểm cho đội
+      Totle[team] = [Totle[team].reduce((sum, value) => sum + value, 0)];
+      updateRankingBox();
+
+    }
+
+    // Gọi hàm updateAttackLines và xử lý Promise
+    // function handleUpdate() {
+    //   updateAttackLines().then((result) => {
+    //     // Xử lý kết quả (Totle) theo cần thiết
+    //     console.log(result);
+    //   });
+    // }
+
+    // Set an interval to update every 3 seconds
+
+
+    function handleResize() {
+      if (window.innerWidth > 1366) {
+        sizeWidth = 1440;
+      } else {
+        sizeWidth = 1040;
+      }
+      // Cập nhật tỷ lệ của phép chiếu khi kích thước thay đổi
+      projection.scale(sizeWidth);
+
+      // Cập nhật SVG và vẽ lại bản đồ
+      svg.attr("width", sizeWidth)
+        .selectAll("path")
+        .attr("d", path)
+
+
+      d3.json('./map.json').then(function (data) {
+        svg.selectAll("path")
+          .data(data.features)
+          .enter()
+          .append("path")
+          .attr("d", path)
+          .attr("fill", "transparent")
+          // .attr("stroke", "red") // Màu đường viền
+          .attr("stroke", function (d) {
+            return getColorBasedOnProperty(d.properties.name);
+          })
+          .attr("stroke-width", 2)
+          .attr("stroke-opacity", 0.8)
+          .attr("transform", function (d, i) {
+            // Dịch chuyển mỗi path sang phải để tạo khoảng trắng giữa chúng
+            return "translate(" + i * 5 + ", 1)";
+          })
+          .on("mouseover", function (event, d) {
+            d3.select(this).attr("fill", "white"); // Thay đổi màu fill khi hover
+            // Hiển thị tooltip khi di chuột qua
+            const tooltip = d3.select(".country-name-tooltip");
+            tooltip.html(d.properties.name) // Sử dụng thuộc tính name hoặc tùy thuộc vào dữ liệu
+              .style("left", (event.pageX + 10) + "px")
+              .style("top", (event.pageY - 10) + "px")
+              .style("display", "block");
+          })
+          .on("mouseout", function () {
+            // Ẩn tooltip khi di chuột ra khỏi đất nước
+            d3.select(".country-name-tooltip").style("display", "none");
+            d3.select(this).attr("fill", "transparent"); // Khôi phục màu fill khi di chuột ra khỏi đất nước
+          });
+        const imagesData = [
+          { name: 'BIDV', href: "./images/logo/logo-bidv.png" },
+          { name: 'HDBank', href: "./images/logo/logo-hdbank.png" },
+          { name: 'MB', href: "./images/logo/logo-mbbank.png" },
+          { name: 'TechcomBank', href: "./images/logo/logo-techcombank.png" },
+          { name: 'TPBank', href: "./images/logo/logo-tpbank.png" },
+          { name: 'VietinBank', href: "./images/logo/logo-vietinbank.png" },
+          { name: 'VPBank', href: "./images/logo/logo-vpbank.png" },
+        ];
+        svg.selectAll("image").remove();
+        // Tính kích thước và vị trí cho từng ảnh dựa trên path tương ứng
+        imagesData.forEach(function (image) {
+
+          const centroid = path.centroid(data.features.find(feature => feature.properties.name === image.name));
+          const x = centroid[0] - 50; // Điều chỉnh x để canh giữa ảnh
+          const y = centroid[1] - 25; // Điều chỉnh y để canh giữa ảnh
+          console.log('check path:', centroid)
+          const width = 100;
+          const height = 50;
+
+          // Tạo và ghép hình ảnh vào SVG
+
+          svg.append("image")
+            .attr("x", x)
+            .attr("y", y)
+            .attr("width", width)
+            .attr("height", height)
+            .attr("xlink:href", image.href);
+        });
+      });
+    }
+
+    window.addEventListener("resize", function () {
+      clearTimeout(window.resizeFinished);
+      window.resizeFinished = setTimeout(function () {
+        handleResize();
+      }, 250);
+    });
+    handleResize();
+
+    // Hàm để đặt màu đường viền dựa trên một thuộc tính cụ thể
+    function getColorBasedOnProperty(propertyValue) {
+      // Thực hiện logic để xác định màu dựa trên giá trị của thuộc tính
+      // Ví dụ đơn giản: Nếu giá trị là 'A', trả về màu đỏ, nếu là 'B', trả về màu xanh
+      switch (propertyValue) {
+        case 'HDBank':
+          return '#ce3c42';
+          break;
+        case 'MB':
+          return 'Blue';
+          break;
+        case 'VPBank':
+          return 'green';
+          break;
+        case 'BIDV':
+          return '#016d69';
+          break;
+        case 'VietinBank':
+          return '#92b6cc';
+          break;
+        case 'TechcomBank':
+          return '#e02329';
+          break;
+        case 'TPBank':
+          return '#714a92';
+          break;
+
+        default:
+          return 'white';
+          break;
+      }
+    }
+  </script>
+</body>
+
+</html>

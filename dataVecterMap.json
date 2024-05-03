@@ -1,0 +1,35 @@
+{
+    "type": "DataVecterMap",
+    "dataVectorMap": [
+      { "source": [54, 33], "target": [70, 30], "attackingTeam": "MB", "targetTeam": "TPBank" },
+      { "source": [54, 33], "target": [43, 33], "attackingTeam": "MB", "targetTeam": "HDBAnk" },
+     
+
+
+      { "source": [43, 33], "target": [74.5, 41.5], "attackingTeam": "HDBAnk", "targetTeam": "VietinBank" },
+      { "source": [43, 33], "target": [65, 33.5], "attackingTeam": "HDBAnk", "targetTeam": "TCB" },
+     
+      { "source": [65, 33.5], "target": [59, 39], "attackingTeam": "TCB", "targetTeam": "VPBank" }, 
+      { "source": [65, 33.5], "target": [62.5, 42], "attackingTeam": "TCB", "targetTeam": "BIDV" }, 
+      
+
+
+      { "source": [62.5, 42], "target": [54, 33], "attackingTeam": "BIDV", "targetTeam": "MB" },
+      { "source": [62.5, 42], "target": [65, 33.5], "attackingTeam": "BIDV", "targetTeam": "TCB" },
+     
+
+
+      { "source": [70, 30], "target": [43, 33], "attackingTeam": "TPBank", "targetTeam": "HDBAnk" },
+      { "source": [70, 30], "target": [65, 33.5], "attackingTeam": "TPBank", "targetTeam": "TCB" },
+     
+      
+      { "source": [59, 39], "target": [65, 33.5], "attackingTeam": "VPBank", "targetTeam": "TCB" },
+      { "source": [59, 39], "target": [62.5, 42], "attackingTeam": "VPBank", "targetTeam": "BIDV" },
+      
+      { "source": [74.5, 41.5], "target": [62.5, 42], "attackingTeam": "VietinBank", "targetTeam": "BIDV" },
+      { "source": [74.5, 41.5], "target": [65, 33.5], "attackingTeam": "VietinBank", "targetTeam": "TCB" }
+     
+     
+    ]
+  }
+
